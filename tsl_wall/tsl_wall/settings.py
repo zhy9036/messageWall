@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'message_pool',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,7 +120,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
 
 # Rest framework settings
 REST_FRAMEWORK = {
@@ -130,3 +132,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': 10
 }
+
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', )

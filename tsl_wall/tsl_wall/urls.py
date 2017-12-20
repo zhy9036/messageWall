@@ -23,7 +23,8 @@ router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
-    url('admin/', admin.site.urls),
+    url(r'admin/', admin.site.urls),
+    url(r'^', include('message_pool.urls', namespace='message_pool')),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/messages/', include('message_pool.api.urls', namespace='message_pool-api')),
