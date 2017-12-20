@@ -5,7 +5,7 @@ from django.contrib.auth.views import logout
 from . import views
 
 urlpatterns = [
-    url(r'^$', RedirectView.as_view(url='/pool/', permanent=True)),
+    url(r'^$', RedirectView.as_view(url='pool/', permanent=True)),
     url(r'^pool/', views.main_view, name='pool'),
     url(r'^login', views.login_view, name='login'),
     url(r'^logout', views.logout_view, name='login'),

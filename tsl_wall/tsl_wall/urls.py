@@ -16,10 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls import url, include
 from rest_framework import routers
-from apitest import views
+from user_api import views
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
+router.register(r'users', views.UserViewSet, base_name='user')
 router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
@@ -27,5 +27,5 @@ urlpatterns = [
     url(r'^', include('message_pool.urls', namespace='message_pool')),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^api/messages/', include('message_pool.api.urls', namespace='message_pool-api')),
+    #url(r'^api/', include('message_pool.api.urls', namespace='message_pool-api')),
 ]

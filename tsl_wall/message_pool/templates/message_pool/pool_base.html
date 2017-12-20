@@ -23,12 +23,13 @@
         {% else %}
         <div class="top">
             <ul>
-              <li class="right"><a href="#contact">Register</a></li>
+              <li class="right"><a onclick="document.getElementById('id02').style.display='block'">Register</a></li>
               <li class="right"><a onclick="document.getElementById('id01').style.display='block'">Login</a></li>
               <li><a href="#about">Hello Guest</a></li>
             </ul>
         </div>
         {% endif %}
+
         <div id="id01" class="modal">
           <form class="modal-content animate" method="post" action="/login/">
              {% csrf_token %}
@@ -54,15 +55,43 @@
             </div>
           </form>
         </div>
+        <div id="id02" class="modal">
+          <form class="modal-content animate" method="post" action="/api/users/">
+             {% csrf_token %}
+            <div class="imgcontainer">
+              <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+              <img src="img_avatar2.png" alt="Avatar" class="avatar">
+            </div>
+
+            <div class="container">
+              <label><b>Email</b></label>
+              <input type="text" placeholder="Enter Email" name="email" required>
+
+              <label><b>Username</b></label>
+              <input type="text" placeholder="Enter Username" name="username" required>
+
+              <label><b>Password</b></label>
+              <input type="password" placeholder="Enter Password" name="password" required>
+
+
+              <button type="submit">Register</button>
+            </div>
+
+            <div class="container" style="background-color:#f1f1f1">
+              <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+            </div>
+          </form>
+        </div>
 
         <script>
         // Get the modal
-        var modal = document.getElementById('id01');
+        var modals =[document.getElementById('id01'),
+                    document.getElementById('id02')];
 
         // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
+            if (modals.includes(event.target)) {
+                event.target.style.display = "none";
             }
         }
         </script>

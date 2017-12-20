@@ -1,9 +1,8 @@
 from django.conf.urls import url
 from django.contrib import admin
-
-from .views import MessageListAPIView
+import message_pool.api.views as views
 
 urlpatterns = [
 
-    url(r'^$', MessageListAPIView.as_view(), name='list'),
+    url(r'^$', views.MessageListAPIView.as_view(), name='list'),
 ]
