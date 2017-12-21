@@ -9,26 +9,13 @@
         <link rel = 'stylesheet' href='css/bootstrap.css' type="text/css"/>
         <script  src= 'js/jquery-3.2.1.min.js' type = 'text/javascript'> </script>
         <script  src= 'js/bootstrap.min.js' type = 'text/javascript'> </script>
+        <script  src="js/jquery.cookies.2.2.0.js" type="text/javascript"></script>
+		<script  src="js/jquery.Storage.js" type="text/javascript"></script>
 	<script  src= 'js/index.js' type = 'text/javascript'> </script>
     </head>
 
     <body>
-        {% if user %}
-        <div class="top">
-            <ul class="topbar">
-              <li class="right"><a href="/logout">Log out</a></li>
-              <li class="topbar"><a>Hello {{ user.username }}</a></li>
-            </ul>
-        </div>
-        {% else %}
-        <div class="top">
-            <ul class="topbar">
-              <li class="right"><a onclick="document.getElementById('id02').style.display='block'">Register</a></li>
-              <li class="right"><a onclick="document.getElementById('id01').style.display='block'">Login</a></li>
-              <li class="topbar"><a href="#about">Hello Guest</a></li>
-            </ul>
-        </div>
-        {% endif %}
+
 
         <div id="id01" class="modal">
           <form class="modal-content animate" method="post" action="/login/">

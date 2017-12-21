@@ -1,12 +1,16 @@
+from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
+import datetime
+from django.http import HttpRequest
 from django.core.urlresolvers import reverse
-
-
+from importlib import import_module
+from django.conf import settings
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
-
 from message_pool.forms import UserForm
 
 
@@ -21,12 +25,47 @@ def main_view(request):
     return render(request, 'message_pool/pool_base.html', {'user': user, 'form': user_form})
 
 
+
+def get_all_logged_in_users_ids1():
+    # Query all non-expired sessions
+    # use timezone.now() instead of datetime.now() in latest versions of Django
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    uid_list = []
+
+    # Build a list of user ids from that query
+    for session in sessions:
+        data = session.get_decoded()
+        uid_list.append(data.get('_auth_user_id', None))
+    return uid_list
+
+
+def init_session(session_key):
+    """
+    Initialize same session as done for ``SessionMiddleware``.
+    """
+    engine = import_module(settings.SESSION_ENGINE)
+    return engine.SessionStore(session_key)
+
+
+def get_all_logged_in_users_ids():
+    now = datetime.datetime.now()
+    uid_list = []
+    sessions = Session.objects.filter(expire_date__gt=now)
+    users = dict(User.objects.values_list('id', 'username'))
+    print(users)
+    for session in sessions:
+        user_id = session.get_decoded().get('_auth_user_id')
+        uid_list.append(user_id)
+    return uid_list
+
+
+####
+# Work around with CORS preflight
+# cross site request
+####
 @csrf_exempt
 def login_view(request):
-    ####
-    # Work around with CORS preflight
-    # cross site request
-    ####
+
     if request.method == "OPTIONS":
         response = HttpResponse()
         response['Access-Control-Allow-Origin'] = '*'
@@ -36,13 +75,12 @@ def login_view(request):
         response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
         return response
     if request.method == "POST":
-        print("******************************", request.POST)
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(username=username, password=password)
         if user is not None and user.is_authenticated():
             login(request, user)
-            response = JsonResponse({'status': 200})
+            response = JsonResponse({'status': 200, 'username': user.username, 'user_id': user.pk})
             response['Access-Control-Allow-Origin'] = '*'
             return response
         response = JsonResponse({'status': 401})
@@ -65,6 +103,28 @@ def register_view(request):
     return HttpResponseRedirect('/pool/')
 
 
+@csrf_exempt
 def logout_view(request):
-    logout(request)
-    return HttpResponseRedirect('/pool/')
+    if request.method == "OPTIONS":
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+        response['Access-Control-Max-Age'] = 1000
+        # note that '*' is not valid for Access-Control-Allow-Headers
+        response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+        return response
+    if request.method == 'POST':
+        username = request.POST['username']
+        user_id = request.POST['user_id']
+        request = HttpRequest()
+        now = datetime.datetime.now()
+        sessions = Session.objects.filter(expire_date__gt=now)
+        users = dict(User.objects.values_list('id', 'username'))
+        for session in sessions:
+            cur_id = session.get_decoded().get('_auth_user_id')
+            if(cur_id == user_id):
+                request.session = init_session(session.session_key)
+                logout(request)
+        response = JsonResponse({'status': 200})
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
