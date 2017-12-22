@@ -46,9 +46,9 @@
 
             <div class="form">
 		        <label>Username :</label>
-				<input type="text" name="dname" id="username">
+				<input type="text" name="username" id="username">
 				<label>Email :</label>
-				<input type="text" name="demail" id="email">
+				<input type="text" name="email" id="email">
 				<label>Password :</label>
 				<input type="password" name="password" id="password">
 				<label>Confirm Password :</label>
@@ -70,11 +70,6 @@
             }
         }
         </script>
-        {% include 'message_pool/message_div.html' %}
 
-        {% if not user %}
-        <p> HAHA </p>
-            {% include 'message_pool/login_div.html' %}
-        {% endif %}
     </body>
 </html>

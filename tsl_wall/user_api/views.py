@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import render
-
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
 # Create your views here.
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, generics
@@ -9,7 +9,7 @@ from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 
 from .serializers import UserSerializer, GroupSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import api_view, permission_classes, detail_route
 from rest_framework.response import Response
 from django.contrib.sessions.models import Session
@@ -39,6 +39,19 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
+    def create(self, request):
+        print("*********************************************")
+        if request.method == "OPTIONS":
+            response = HttpResponse()
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+            response['Access-Control-Max-Age'] = 1000
+            # note that '*' is not valid for Access-Control-Allow-Headers
+            response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+            return response
+        if request.method == "POST":
+            print("*********************************************", request.POST)
+            return super().create(request)
 
     def get_object(self):
         user_list = get_all_logged_in_users_ids()
@@ -65,6 +78,8 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         if self.action == 'list':
             permission_classes = [IsAdminUser]
+        elif self.action == 'create':
+            permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -96,8 +111,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if username is not None:
             query_set = User.objects.filter(username=username)
         return query_set
-    
-
     '''
 
 class GroupViewSet(viewsets.ModelViewSet):

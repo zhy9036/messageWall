@@ -1,28 +1,48 @@
 $(document).ready(function() {
 	
-	var logoutUrl = "http://127.0.0.1:8000/logout";
+	var baseURL = "http://127.0.0.1:8000/";
 	renderTopbar();
+	renderBottombar();
 	
-	
+	function validateEmail(email){  
+		if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)){  
+			return true;  
+		}   
+		return false;  
+	} 
 	$("#register").click(function() {
-		var name = $("#name").val();
+		var name = $("#username").val();
 		var email = $("#email").val();
 		var password = $("#password").val();
 		var cpassword = $("#cpassword").val();
 		if (name == '' || email == '' || password == '' || cpassword == '') {
 			alert("Please fill all fields");
+		} else if (!validateEmail(email)){
+			alert("email format incorrect");
 		} else if ((password.length) < 8) {
 			alert("Password should atleast 8 character in length");
 		} else if (!(password).match(cpassword)) {
 			alert("Your passwords don't match. Try again?");
 		} else {
-			$.post("register.php", {
-				usename: name,
-				email: email,
-				password: password
-			}, function(data) {
-				alert(data);
-			});		
+			$.ajax({
+				url: baseURL + "register",
+				type: "POST",
+				dataType: "json",
+				data: {username: name,
+					   email: email,
+					   password: password,
+					
+					},
+				success: function(data){
+					if(data.status == 200){
+						alert('User created and you can know log in!')
+						location.reload();
+					}else{
+						alert('username:' +  name + ' already taken please pick another one')
+					}
+				}
+				
+			});	
 		}
 	});
 
@@ -33,7 +53,7 @@ $(document).ready(function() {
 			alert("Please fill all fields");
 		} else {
 			$.ajax({
-			  url: "http://127.0.0.1:8000/login",
+			  url: baseURL + "login",
 			  crossDomain: true,
 			  type: "POST",
 			  dataType:'json',
@@ -61,7 +81,7 @@ $(document).ready(function() {
 		var name = value[0];
 		var user_id = value[1];
 		$.ajax({
-		  url: logoutUrl,
+		  url: baseURL + "logout",
 		  crossDomain: true,
 		  type: "POST",
 		  dataType:'json',
@@ -96,7 +116,6 @@ $(document).ready(function() {
 		li2 = $("<li>").addClass("topbar");
 		
 		if(session_value != null && session_value != ""){ // user logged in
-			alert(session_value);
 			var username = session_value.split(':')[0];
 			li.append($("<a>").attr("id", "logout").html("Log out"));
 			li2.append($("<a>").html("Hello " + username));
@@ -116,6 +135,24 @@ $(document).ready(function() {
 	}
 
 
+	function renderBottombar(){
+		var session_value = getCookie("session");
+		ul = $("<ul>").addClass("bottombar");
+		li = $("<li>").addClass("bottombar");
+		li2 = $("<li>").addClass("right");
+		li2.append($("<a>").addClass("active").attr("id", "send").html("Send"));
+		if(session_value != null && session_value != ""){ // user logged in
+			li.append($("<input>").prop('disabled', false).addClass("bottombar").attr({"placeholder": "Type message here", "id":"message"}));
+
+		}else{ // not logged in yet
+			li.append($("<input>").prop('disabled', true).addClass("bottombar").attr({"placeholder": "Log in to send message", "id":"message"}));
+
+		}
+		ul.append(li);
+		ul.append(li2);
+		$("body").append(ul);
+		
+	}
 
 	//need to check browser first
 	//chrome won't accept local cookie with path

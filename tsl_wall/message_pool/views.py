@@ -88,8 +88,20 @@ def login_view(request):
         return response
 
 
+@csrf_exempt
 def register_view(request):
+
+    if request.method == "OPTIONS":
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+        response['Access-Control-Max-Age'] = 1000
+        # note that '*' is not valid for Access-Control-Allow-Headers
+        response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+        return response
+
     if request.method == 'POST':
+        '''
         user_form = UserForm(data=request.POST)
         if user_form.is_valid():
             user = user_form.save()
@@ -100,7 +112,22 @@ def register_view(request):
                 login(request, user)
         else:
             return Http404
-    return HttpResponseRedirect('/pool/')
+        '''
+        print("***********************", request.POST)
+        email = request.POST['email']
+        username = request.POST['username']
+        password = request.POST['password']
+        userset = User.objects.filter(username=username)
+        if userset.first() is None:
+            user = User.objects.create_user(email=email, username=username, password=password)
+            user.save()
+            response = JsonResponse({'status': 200})
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
+        else:
+            response = JsonResponse({'status': 401, 'error': 'Username not available'})
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
 
 @csrf_exempt
