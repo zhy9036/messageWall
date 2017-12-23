@@ -122,13 +122,17 @@ def register_view(request):
             user.save()
             response = JsonResponse({'status': 200})
             response['Access-Control-Allow-Origin'] = '*'
-            send_mail(
-                'Hi ' + username + '! Welcome to MessageWall!',
-                'Thanks for using it enjoy!',
-                '313273828@qq.com',
-                [email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    'Hi ' + username + '! Welcome to MessageWall!',
+                    'Thanks for using it enjoy!',
+                    '313273828@qq.com',
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(e.with_traceback())
+                pass
             return response
         else:
             response = JsonResponse({'status': 401, 'error': 'Username not available'})
