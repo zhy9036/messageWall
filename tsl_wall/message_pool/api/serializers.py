@@ -6,7 +6,6 @@ class MessageDetailSerializer(ModelSerializer):
     class Meta:
         model = Message
         fields = ['id',
-                  'user',
                   'content',
                   'create_date',
                   ]
@@ -15,7 +14,8 @@ class MessageDetailSerializer(ModelSerializer):
 class MessageListSerializer(ModelSerializer):
     class Meta:
         model = Message
-        fields = ['user',
+        fields = ['user_id',
+                  'username',
                   'content',
                   'create_date'
                   ]

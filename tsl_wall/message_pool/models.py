@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -5,9 +6,16 @@ from django.conf import settings
 
 
 class Message(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=1)
+    user_id = models.IntegerField()
+    username = models.CharField(max_length=200)
     content = models.CharField(max_length=2000)
     create_date = models.DateTimeField(default=timezone.now)
 
+    @property
+    def get_username(self):
+        return User.objects.get(pk=self.user_id).username
+
     def __str__(self):
-        return self.user.username + ' created at: '  + str(self.create_date)
+        return str(self.get_username()) + ' created at: ' + str(self.create_date)
+
+

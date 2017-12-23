@@ -1,7 +1,6 @@
 $(document).ready(function() {
 	
 	var baseURL = "http://127.0.0.1:8000/";
-
 	renderTopbar();
 	renderBottombar();
 	refreshWall();
@@ -19,8 +18,9 @@ $(document).ready(function() {
 			timeSpan.addClass("time-left");
 		}
 		div.append($('<p>').html(item.content));
-		div.append(timeSpan.html(item.create_date));
-		$("#messages").append(div);
+		var ts = new Date(item.create_date);
+		div.append(timeSpan.html(item.username + " " + ts.toLocaleString()));
+		$("#message_div").append(div);
 	}
 	
 	function refreshWall(){
@@ -29,10 +29,10 @@ $(document).ready(function() {
 		  type: "GET",
 		  dataType:'json',
 		  success: function(data){
-			if($("#messages").length){
-				$("#messages").empty();
+			if($("#message_div").length){
+				$("#message_div").empty();
 			}else{
-				$("body").append($("<div>").attr("id", "messages"));
+				$("body").append($("<div>").attr("id", "message_div"));
 			}
 			data.forEach(renderMessage);
 		  },
@@ -54,13 +54,17 @@ $(document).ready(function() {
 		var password = $("#password").val();
 		var cpassword = $("#cpassword").val();
 		if (name == '' || email == '' || password == '' || cpassword == '') {
-			alert("Please fill all fields");
+			//alert("Please fill all fields");
+			showErrorMessage("Please fill all fields");
 		} else if (!validateEmail(email)){
-			alert("email format incorrect");
+			//alert("email format incorrect");
+			showErrorMessage("email format incorrect");
 		} else if ((password.length) < 8) {
-			alert("Password should atleast 8 character in length");
+			//alert("Password should atleast 8 character in length");
+			showErrorMessage("Password should atleast 8 character in length");
 		} else if (!(password).match(cpassword)) {
-			alert("Your passwords don't match. Try again?");
+			//alert("Your passwords don't match. Try again?");
+			showErrorMessage("Your passwords don't match. Try again?");
 		} else {
 			$.ajax({
 				url: baseURL + "/register",
@@ -73,10 +77,12 @@ $(document).ready(function() {
 					},
 				success: function(data){
 					if(data.status == 200){
-						alert('User created and you can know log in!')
-						location.reload();
+						//alert('User created and you can know log in!')
+						showSuccessMessage('User created and you can know log in!');
+						document.getElementById('id02').style.display='none';
 					}else{
-						alert('username:' +  name + ' already taken please pick another one')
+						//alert('username:' +  name + ' already taken please pick another one')
+						showErrorMessage('username:' +  name + ' already taken please pick another one');
 					}
 				}
 				
@@ -88,7 +94,8 @@ $(document).ready(function() {
 		var name = $("#username_login").val();
 		var password = $("#password_login").val();
 		if (name == '' ||password == '') {
-			alert("Please fill all fields");
+			//alert("Please fill all fields");
+			showErrorMessage("Please fill all fields");
 		} else {
 			$.ajax({
 			  url: baseURL + "login",
@@ -100,10 +107,12 @@ $(document).ready(function() {
 			  success: function(data){
 
 					if(data.status == 401){
-						alert("Password or Username is incorrect!");
+						//alert("Password or Username is incorrect!");
+						showErrorMessage("Password or Username is incorrect!");
 					}else{
 						var cookievalue = data.username + ":" + data.user_id;
 						setCookie('session', cookievalue, 1);
+						document.getElementById('id01').style.display='none';
 						location.reload();
 					}
 			  },
@@ -127,14 +136,73 @@ $(document).ready(function() {
 				 user_id: user_id},
 		  success: function(data){
 				deleteCookie("session");
-				alert(name + " logged out!")
-				location.reload();
+				//alert(name + " logged out!")
+				showSuccessMessage(name + " logged out!");
+				renderTopbar();
+				renderBottombar();
+				//location.reload();
 		  },
 		  complete: function(data){
 			  //location.reload();
 		  }
 		});
 	});
+	
+	$("#send").click(function() {
+		var session = getCookie("session");
+		var session_value = session.split(":");
+		var name = session_value[0];
+		var user_id = session_value[1];
+		var content = $("#message_input").val();
+		if(session_value != null && session_value != "" &&
+			content.trim() != ""){ // user logged in and input not empty
+			$.ajax({
+			  url: baseURL + "api/messages/",
+			  crossDomain: true,
+			  type: "POST",
+			  dataType:'json',
+			  data: {content: content,
+					 username: name,
+					 user_id: user_id},
+			  success: function(data){
+					refreshWall();
+					$("#message_input").val("");
+			  },
+			  complete: function(data){
+				  //location.reload();
+			  }
+			});
+		}
+	});
+	
+	
+	function showErrorMessage(message){
+			BootstrapDialog.show({
+                type: BootstrapDialog.TYPE_DANGER,
+                title: 'Error',
+                message: message,
+                buttons: [{
+					label: 'Close',
+					action: function(dialogItself){
+						dialogItself.close();
+					}
+                }]
+            });
+	}
+	
+	function showSuccessMessage(message){
+		BootstrapDialog.show({
+			type: BootstrapDialog.TYPE_SUCCESS,
+			title: 'Success',
+			message: message,
+			buttons: [{
+				label: 'Close',
+				action: function(dialogItself){
+					dialogItself.close();
+				}
+			}]
+		});
+	}
 	
 	function genCSRFTOKEN(){
 		var buf = new Uint8Array(1);
@@ -188,10 +256,10 @@ $(document).ready(function() {
 		li2 = $("<li>").addClass("right");
 		li2.append($("<a>").addClass("active").attr("id", "send").html("Send"));
 		if(session_value != null && session_value != ""){ // user logged in
-			li.append($("<input>").prop('disabled', false).addClass("bottombar").attr({"placeholder": "Type message here", "id":"message"}));
+			li.append($("<input>").prop('disabled', false).addClass("bottombar").attr({"placeholder": "Type message here", "id":"message_input"}));
 
 		}else{ // not logged in yet
-			li.append($("<input>").prop('disabled', true).addClass("bottombar").attr({"placeholder": "Log in to send message", "id":"message"}));
+			li.append($("<input>").prop('disabled', true).addClass("bottombar").attr({"placeholder": "Log in to send message", "id":"message_input"}));
 
 		}
 		ul.append(li);

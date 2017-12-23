@@ -51,8 +51,6 @@ def get_all_logged_in_users_ids():
     now = datetime.datetime.now()
     uid_list = []
     sessions = Session.objects.filter(expire_date__gt=now)
-    users = dict(User.objects.values_list('id', 'username'))
-    print(users)
     for session in sessions:
         user_id = session.get_decoded().get('_auth_user_id')
         uid_list.append(user_id)
@@ -154,10 +152,9 @@ def logout_view(request):
         request = HttpRequest()
         now = datetime.datetime.now()
         sessions = Session.objects.filter(expire_date__gt=now)
-        users = dict(User.objects.values_list('id', 'username'))
         for session in sessions:
             cur_id = session.get_decoded().get('_auth_user_id')
-            if(cur_id == user_id):
+            if cur_id == user_id:
                 request.session = init_session(session.session_key)
                 logout(request)
         response = JsonResponse({'status': 200})

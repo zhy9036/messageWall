@@ -49,12 +49,10 @@ class UserViewSet(viewsets.ModelViewSet):
             # note that '*' is not valid for Access-Control-Allow-Headers
             response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
             return response
-        print('**********************************************************')
         serializer.save(data=self.request.POST)
 
 
     def create(self, request):
-        print("*********************************************")
         if request.method == "OPTIONS":
             response = HttpResponse()
             response['Access-Control-Allow-Origin'] = '*'
@@ -64,7 +62,6 @@ class UserViewSet(viewsets.ModelViewSet):
             response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
             return response
         if request.method == "POST":
-            print("*********************************************", request.POST)
             return super().create(request)
 
     def get_object(self):
@@ -107,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.get_object()  # retrieve an object by pk provided
         username = self.request.Get.get('username', None)
         print('username', username)
-        schedule = User.objects.filter(username=username)
+        schedule = User.objects.filterself.user.username + (username=username)
         user_json = UserSerializer(user, many=True)
         return Response(user_json.data)
 
