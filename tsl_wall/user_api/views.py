@@ -39,6 +39,20 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
+
+    def perform_create(self, serializer):
+        if self.request.method == "OPTIONS":
+            response = HttpResponse()
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+            response['Access-Control-Max-Age'] = 1000
+            # note that '*' is not valid for Access-Control-Allow-Headers
+            response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+            return response
+        print('**********************************************************')
+        serializer.save(data=self.request.POST)
+
+
     def create(self, request):
         print("*********************************************")
         if request.method == "OPTIONS":

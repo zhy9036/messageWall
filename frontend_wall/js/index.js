@@ -1,8 +1,46 @@
 $(document).ready(function() {
 	
 	var baseURL = "http://127.0.0.1:8000/";
+
 	renderTopbar();
 	renderBottombar();
+	refreshWall();
+	setInterval(refreshWall, 15*1000); //refreash wall every 15 seconds
+	
+	
+	function renderMessage(item, index){
+		div = $('<div>');
+		timeSpan = $('<span>');
+		if (index % 2 == 0){
+			div.addClass("container message");
+			timeSpan.addClass("time-right");
+		}else{
+			div.addClass("container message darker");
+			timeSpan.addClass("time-left");
+		}
+		div.append($('<p>').html(item.content));
+		div.append(timeSpan.html(item.create_date));
+		$("#messages").append(div);
+	}
+	
+	function refreshWall(){
+		$.ajax({
+		  url: baseURL + "api/messages/",
+		  type: "GET",
+		  dataType:'json',
+		  success: function(data){
+			if($("#messages").length){
+				$("#messages").empty();
+			}else{
+				$("body").append($("<div>").attr("id", "messages"));
+			}
+			data.forEach(renderMessage);
+		  },
+		  complete: function(data){
+			  //location.reload();
+		  }
+		});
+	}
 	
 	function validateEmail(email){  
 		if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)){  
@@ -25,7 +63,7 @@ $(document).ready(function() {
 			alert("Your passwords don't match. Try again?");
 		} else {
 			$.ajax({
-				url: baseURL + "register",
+				url: baseURL + "/register",
 				type: "POST",
 				dataType: "json",
 				data: {username: name,
@@ -98,12 +136,20 @@ $(document).ready(function() {
 		});
 	});
 	
+	function genCSRFTOKEN(){
+		var buf = new Uint8Array(1);
+		window.crypto.getRandomValues(buf); 
+		return buf[0];
+	}
+	
+	function csrfSafeMethod(method) {
+		// these HTTP methods do not require CSRF protection
+		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+	}
 	
     $(function () {
         $.ajaxSetup({
-            headers: {
-                "X-CSRFToken": getCookie("csrftoken")
-            }
+			headers:{"X-CSRFToken": getCookie('csrftoken')}
         });
     });
     
@@ -185,7 +231,7 @@ $(document).ready(function() {
 		        return c.substring(name.length, c.length);
 		    }
 		}
-    	return "";
+    	return null;
 	}
 	
 	function deleteCookie(cname) {

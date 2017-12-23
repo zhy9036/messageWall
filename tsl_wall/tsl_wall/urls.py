@@ -27,5 +27,5 @@ urlpatterns = [
     url(r'^', include('message_pool.urls', namespace='message_pool')),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    #url(r'^api/', include('message_pool.api.urls', namespace='message_pool-api')),
+    url(r'^api/messages/', include('message_pool.api.urls', namespace='message_pool-api')),
 ]

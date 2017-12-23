@@ -10,9 +10,9 @@ from django.core.urlresolvers import reverse
 from importlib import import_module
 from django.conf import settings
 # Create your views here.
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from message_pool.forms import UserForm
-
+from django.core.mail import send_mail
 
 def main_view(request):
     user = None
@@ -63,6 +63,7 @@ def get_all_logged_in_users_ids():
 # Work around with CORS preflight
 # cross site request
 ####
+#@ensure_csrf_cookie
 @csrf_exempt
 def login_view(request):
 
@@ -123,6 +124,13 @@ def register_view(request):
             user.save()
             response = JsonResponse({'status': 200})
             response['Access-Control-Allow-Origin'] = '*'
+            send_mail(
+                'Hi ' + username + '! Welcome to MessageWall!',
+                'Thanks for using it enjoy!',
+                '313273828@qq.com',
+                [email],
+                fail_silently=False,
+            )
             return response
         else:
             response = JsonResponse({'status': 401, 'error': 'Username not available'})
