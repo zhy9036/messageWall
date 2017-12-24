@@ -1,20 +1,19 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
-# Create your views here.
 from django.contrib.auth.models import User, Group
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, generics
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 
-from .serializers import UserSerializer, GroupSerializer
+from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import api_view, permission_classes, detail_route
 from rest_framework.response import Response
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-
+from rest_framework import status
+from django.core.mail import send_mail
 
 def get_all_logged_in_users_ids():
     # Query all non-expired sessions
@@ -29,6 +28,54 @@ def get_all_logged_in_users_ids():
     return uid_list
 
 
+@api_view(['GET', 'POST', 'OPTIONS'])
+@csrf_exempt
+def user_view(request):
+    try:
+        serializer_class = UserSerializer
+        if request.method == "OPTIONS":
+            response = HttpResponse()
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+            response['Access-Control-Max-Age'] = 1000
+            # note that '*' is not valid for Access-Control-Allow-Headers
+            response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+            return response
+
+        if request.method == 'GET':
+            queryset = User.objects.all()
+            serialized_data = serializer_class(queryset, many=True).data
+            response = Response(serialized_data, status=status.HTTP_200_OK)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        if request.method == 'POST':
+            serializer = serializer_class(data=request.POST)
+            username = request.POST['username']
+            email = request.POST['email']
+            if serializer.is_valid():
+                serializer.save()
+                response = Response(serializer.data, status=status.HTTP_201_CREATED)
+                response['Access-Control-Allow-Origin'] = '*'
+                try:
+                    send_mail(
+                        'Hi ' + username + '! Welcome to MessageWall!',
+                        'Thanks for using it enjoy!',
+                        '313273828@qq.com',
+                        [email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    print(e.with_traceback())
+                return response
+            else:
+                response = Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
+    except Exception as e:
+        response = JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 #@permission_classes((IsAdminUser, ))
 class UserViewSet(viewsets.ModelViewSet):
@@ -123,11 +170,4 @@ class UserViewSet(viewsets.ModelViewSet):
             query_set = User.objects.filter(username=username)
         return query_set
     '''
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
 

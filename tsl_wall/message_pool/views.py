@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from message_pool.forms import UserForm
 from django.core.mail import send_mail
 
+
 def main_view(request):
     user = None
     user_form = UserForm(data=request.POST)
@@ -23,20 +24,6 @@ def main_view(request):
     except (AttributeError, KeyError):
         pass
     return render(request, 'message_pool/pool_base.html', {'user': user, 'form': user_form})
-
-
-
-def get_all_logged_in_users_ids1():
-    # Query all non-expired sessions
-    # use timezone.now() instead of datetime.now() in latest versions of Django
-    sessions = Session.objects.filter(expire_date__gte=timezone.now())
-    uid_list = []
-
-    # Build a list of user ids from that query
-    for session in sessions:
-        data = session.get_decoded()
-        uid_list.append(data.get('_auth_user_id', None))
-    return uid_list
 
 
 def init_session(session_key):
@@ -100,19 +87,6 @@ def register_view(request):
         return response
 
     if request.method == 'POST':
-        '''
-        user_form = UserForm(data=request.POST)
-        if user_form.is_valid():
-            user = user_form.save()
-            print(user.username, user_form.cleaned_data['password'])
-
-            user = authenticate(username=user.username, password=user_form.cleaned_data['password'])
-            if user.is_authenticated():
-                login(request, user)
-        else:
-            return Http404
-        '''
-        print("***********************", request.POST)
         email = request.POST['email']
         username = request.POST['username']
         password = request.POST['password']
@@ -132,7 +106,7 @@ def register_view(request):
                 )
             except Exception as e:
                 print(e.with_traceback())
-                pass
+
             return response
         else:
             response = JsonResponse({'status': 401, 'error': 'Username not available'})

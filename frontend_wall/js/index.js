@@ -67,7 +67,7 @@ $(document).ready(function() {
 			showErrorMessage("Your passwords don't match. Try again?");
 		} else {
 			$.ajax({
-				url: baseURL + "/register",
+				url: baseURL + "api/users/",
 				type: "POST",
 				dataType: "json",
 				data: {username: name,
@@ -75,17 +75,21 @@ $(document).ready(function() {
 					   password: password,
 					
 					},
-				success: function(data){
-					if(data.status == 200){
-						//alert('User created and you can know log in!')
-						showSuccessMessage('User created and you can know log in!');
+				statusCode: {
+					400: function() {
+						showErrorMessage('Username is taken, please choose another one');
+					},
+					
+					500: function() {
+						showErrorMessage('Internal server error. Please try again later!');
+					},
+					
+					201: function() {
+						showSuccessMessage('User created and you can now log in!');
 						document.getElementById('id02').style.display='none';
-					}else{
-						//alert('username:' +  name + ' already taken please pick another one')
-						showErrorMessage('username:' +  name + ' already taken please pick another one');
 					}
 				}
-				
+					
 			});	
 		}
 	});

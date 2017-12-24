@@ -11,16 +11,11 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         print(validated_data)
         user = User.objects.create_user(username=validated_data['username'],
                                         email=validated_data['email'],
-                                        password=validated_data['password'])
+                                        password=validated_data['user']['password'])
         return user
 
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'groups', 'password')
+        fields = ('username', 'email', 'password')
         write_only_fields = ('password',)
 
-
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Group
-        fields = ('url', 'name')
