@@ -19,8 +19,8 @@ from django.conf.urls import url, include
 
 urlpatterns = [
     url(r'admin/', admin.site.urls),
-    url(r'^', include('message_pool.urls', namespace='message_pool')),
+   # url(r'^', include('message_api.urls', namespace='message_api')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^api/messages/', include('message_pool.api.urls', namespace='message_pool-api')),
-    url(r'^api/users/', include('user_api.urls', namespace='message_pool-api')),
+    url(r'^api/messages/', include('message_api.urls', namespace='message_api')),
+    url(r'^api/users/', include('user_api.urls', namespace='user_api')),
 ]

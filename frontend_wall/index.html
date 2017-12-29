@@ -22,10 +22,10 @@
     <body>
 	
         <div id="id01" class="modal">
-          <form class="modal-content animate" method="post" action="/login/">
+          <form class="modal-content animate" >
             <div class="imgcontainer">
               <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-              <img src="img_avatar2.png" alt="Avatar" class="avatar">
+              <p1 style="font-size:16pt; color=grey"> Login </p1>
             </div>
 
             <div class="form">
@@ -35,19 +35,19 @@
               <label><b>Password</b></label>
               <input type="password" placeholder="Enter Password" id="password_login" name="password" required>
 
-              <input type="button" id="login">Login</button>
-              <input type="checkbox" checked="checked"> Remember me
             </div>
 
             <div class="form" style="background-color:#f1f1f1">
-              <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
-              <span class="psw">Forgot <a href="#">password?</a></span>
+              <button type="button" id="login" style="color:white" class="confirmbtn">Login</button>
             </div>
           </form>
         </div>
         <div id="id02" class="modal">
           <form class="modal-content animate" method="post" action="#">
-
+			<div class="imgcontainer">
+              <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+              <p1 style="font-size:16pt; color=grey"> Register </p1>
+            </div>
             <div class="form">
 		        <label>Username :</label>
 				<input type="text" name="username" id="username">
@@ -57,7 +57,9 @@
 				<input type="password" name="password" id="password">
 				<label>Confirm Password :</label>
 				<input type="password" name="cpassword" id="cpassword">
-                <input type="button" id="register" value="Register" >
+            </div>
+			<div class="form" style="background-color:#f1f1f1">
+              <button type="button" id="register" style="color:white" class="confirmbtn">Register</button>
             </div>
           </form>
         </div>

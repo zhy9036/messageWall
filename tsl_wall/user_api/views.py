@@ -1,19 +1,27 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
-from django.contrib.auth.models import User, Group
+from django.conf import settings
+from django.contrib.auth import logout, authenticate, login
+from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.models import User
+from django.http.request import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import viewsets, generics
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied
-from rest_framework.status import HTTP_401_UNAUTHORIZED
-
+from importlib import import_module
 from .serializers import UserSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.decorators import api_view, permission_classes, detail_route
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from rest_framework import status
 from django.core.mail import send_mail
+import datetime
+
+
+def init_session(session_key):
+    """
+    Initialize same session as done for ``SessionMiddleware``.
+    """
+    engine = import_module(settings.SESSION_ENGINE)
+    return engine.SessionStore(session_key)
+
 
 def get_all_logged_in_users_ids():
     # Query all non-expired sessions
@@ -28,6 +36,11 @@ def get_all_logged_in_users_ids():
     return uid_list
 
 
+
+####
+# Work around with CORS preflight
+# handle OPTIONS manually
+####
 @api_view(['GET', 'POST', 'OPTIONS'])
 @csrf_exempt
 def user_view(request):
@@ -66,108 +79,73 @@ def user_view(request):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    print(e.with_traceback())
+                    print(str(e))
                 return response
             else:
                 response = Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
     except Exception as e:
+        print(str(e))
         response = JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         response['Access-Control-Allow-Origin'] = '*'
         return response
 
-#@permission_classes((IsAdminUser, ))
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
 
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-
-    def perform_create(self, serializer):
-        if self.request.method == "OPTIONS":
-            response = HttpResponse()
+@csrf_exempt
+def logout_view(request):
+    if request.method == "OPTIONS":
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+        response['Access-Control-Max-Age'] = 1000
+        # note that '*' is not valid for Access-Control-Allow-Headers
+        response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+        return response
+    if request.method == 'POST':
+        found = False
+        username = request.POST['username']
+        user_id = request.POST['user_id']
+        request = HttpRequest()
+        now = datetime.datetime.now()
+        sessions = Session.objects.filter(expire_date__gt=now)
+        for session in sessions:
+            cur_id = session.get_decoded().get('_auth_user_id')
+            if cur_id == user_id:
+                found = True
+                request.session = init_session(session.session_key)
+                logout(request)
+        if found:
+            response = JsonResponse({'status': 200}, status=status.HTTP_200_OK)
             response['Access-Control-Allow-Origin'] = '*'
-            response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
-            response['Access-Control-Max-Age'] = 1000
-            # note that '*' is not valid for Access-Control-Allow-Headers
-            response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
             return response
-        serializer.save(data=self.request.POST)
-
-
-    def create(self, request):
-        if request.method == "OPTIONS":
-            response = HttpResponse()
-            response['Access-Control-Allow-Origin'] = '*'
-            response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
-            response['Access-Control-Max-Age'] = 1000
-            # note that '*' is not valid for Access-Control-Allow-Headers
-            response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
-            return response
-        if request.method == "POST":
-            return super().create(request)
-
-    def get_object(self):
-        user_list = get_all_logged_in_users_ids()
-
-        try:
-            user_list.index(str(self.request.user.pk))
-        except ValueError:
-            raise NotAuthenticated
-
-        abc = self.kwargs.get('pk')
-        user = User.objects.filter(username=abc)
-        user = user.first()
-        if user is None:
-            try:
-                user = User.objects.get(pk=abc)
-            except (ValueError, ObjectDoesNotExist):
-                raise Http404
-        return user
-
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action == 'list':
-            permission_classes = [IsAdminUser]
-        elif self.action == 'create':
-            permission_classes = [AllowAny]
         else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+            response = JsonResponse({'status': 403}, status=status.HTTP_403_FORBIDDEN)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
 
+@csrf_exempt
+def login_view(request):
 
-
-    '''
-    @detail_route(methods=['get'])
-    def date_list(self, request, pk=None):
-        user = self.get_object()  # retrieve an object by pk provided
-        username = self.request.Get.get('username', None)
-        print('username', username)
-        schedule = User.objects.filterself.user.username + (username=username)
-        user_json = UserSerializer(user, many=True)
-        return Response(user_json.data)
-
-    @detail_route(methods=['post'], permission_classes=[IsAdminOrIsSelf], url_path='change-password')
-        def set_password(self, request, pk=None):
-    def retrieve(self, request, *args, **kwargs):
-        id = kwargs.get('user_id', None)
-        username = self.request.query_params.get('username', None)
-        print("))))))))))))))))))))))))))))))))))))))))))))")
-        self.queryset = User.objects.filter(username=username)
-        return super(UserViewSet, self).retrieve(request, *args, **kwargs)
-    def get_queryset(self):
-        username = self.request.query_params.get('username', None)
-        query_set = User.objects.all()
-        if username is not None:
-            query_set = User.objects.filter(username=username)
-        return query_set
-    '''
-
+    if request.method == "OPTIONS":
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+        response['Access-Control-Max-Age'] = 1000
+        # note that '*' is not valid for Access-Control-Allow-Headers
+        response['Access-Control-Allow-Headers'] = 'origin, x-csrftoken, content-type, accept'
+        return response
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(username=username, password=password)
+        if user is not None and user.is_authenticated():
+            login(request, user)
+            response = JsonResponse({'status': 200, 'username': user.username, 'user_id': user.pk},
+                                    status=status.HTTP_200_OK)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
+        response = JsonResponse({'status': 403}, status=status.HTTP_403_FORBIDDEN)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response

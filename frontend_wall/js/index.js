@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	
-	var baseURL = "http://127.0.0.1:8000/";
+	var baseURL = "http://127.0.0.1:8000/api/";
 	renderTopbar();
 	renderBottombar();
 	refreshWall();
@@ -25,7 +25,7 @@ $(document).ready(function() {
 	
 	function refreshWall(){
 		$.ajax({
-		  url: baseURL + "api/messages/",
+		  url: baseURL + "messages/",
 		  type: "GET",
 		  dataType:'json',
 		  success: function(data){
@@ -67,7 +67,7 @@ $(document).ready(function() {
 			showErrorMessage("Your passwords don't match. Try again?");
 		} else {
 			$.ajax({
-				url: baseURL + "api/users/",
+				url: baseURL + "users/",
 				type: "POST",
 				dataType: "json",
 				data: {username: name,
@@ -102,15 +102,27 @@ $(document).ready(function() {
 			showErrorMessage("Please fill all fields");
 		} else {
 			$.ajax({
-			  url: baseURL + "login",
+			  url: baseURL + "users/login/",
 			  crossDomain: true,
 			  type: "POST",
 			  dataType:'json',
 			  data: {username: name,
 					 password: password},
+			  statusCode: {
+					403: function() {
+						showErrorMessage("Password or Username is incorrect!");
+					},
+					
+					200: function() {
+						var cookievalue = data.username + ":" + data.user_id;
+						setCookie('session', cookievalue, 1);
+						document.getElementById('id01').style.display='none';
+						location.reload();
+					}
+				},
 			  success: function(data){
 
-					if(data.status == 401){
+					if(data.status == 403){
 						//alert("Password or Username is incorrect!");
 						showErrorMessage("Password or Username is incorrect!");
 					}else{
@@ -132,7 +144,7 @@ $(document).ready(function() {
 		var name = value[0];
 		var user_id = value[1];
 		$.ajax({
-		  url: baseURL + "logout",
+		  url: baseURL + "users/logout/",
 		  crossDomain: true,
 		  type: "POST",
 		  dataType:'json',
@@ -161,7 +173,7 @@ $(document).ready(function() {
 		if(session_value != null && session_value != "" &&
 			content.trim() != ""){ // user logged in and input not empty
 			$.ajax({
-			  url: baseURL + "api/messages/",
+			  url: baseURL + "messages/",
 			  crossDomain: true,
 			  type: "POST",
 			  dataType:'json',
