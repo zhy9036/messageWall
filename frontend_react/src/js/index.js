@@ -61,7 +61,7 @@ $(document).ready(function() {
 			showErrorMessage("email format incorrect");
 		} else if ((password.length) < 8) {
 			//alert("Password should atleast 8 character in length");
-			showErrorMessage("Password should at least 8 character in length");
+			showErrorMessage("Password should atleast 8 character in length");
 		} else if (!(password).match(cpassword)) {
 			//alert("Your passwords don't match. Try again?");
 			showErrorMessage("Your passwords don't match. Try again?");

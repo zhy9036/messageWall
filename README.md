@@ -31,6 +31,11 @@ b. Start the backend (*make sure the virtual env is ativated*)
     python manage.py runserver
 ----
 
-### 3. Using the frontend
-    cd path_to_project_folder/frontend_wall
-use web browser to open **index.html** 
+### 3. Using the using React frontend (Updated)
+    npm install -g create-react-app
+    cd ~/Desktop
+    create-react-app react_wall && cd react_wall
+    rm -r src/ public/
+    cp -r path_to_project_folder/frontend_react/* .
+    npm start
+

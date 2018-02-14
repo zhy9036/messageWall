@@ -1,1 +1,5 @@
 wall_env/
+venv/
+*.json
+node_modules/
+frontend_react/README.md
